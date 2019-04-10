@@ -19,9 +19,11 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="LeastSquareEstimation.h" />
     <ClInclude Include="Model.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="LeastSquareEstimation.cpp" />
     <ClCompile Include="Model.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

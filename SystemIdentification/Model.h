@@ -1,25 +1,22 @@
 #pragma once
 #include <Eigen\Dense>
 #include <vector>
-class Model
+class ArxModel
 {
 public:
-    Model();
-    Model(unsigned na, unsigned nb = 0, unsigned nc = 0);
-    virtual ~Model() = default;
+    ArxModel();
+    ArxModel(unsigned na, unsigned nb = 0);
+    virtual ~ArxModel() = default;
 
     // coefficients
-    Eigen::VectorXd coefA, coefB, coefC;
+    Eigen::VectorXd coefA, coefB;
     // pure delay
     unsigned nd;
     double y;   //output
     // update the model with input and noise.
-    virtual double update(double input, double noise);
+    virtual double update(double input, double noise = 0);
 
 protected:
-    // record inputs, outputs and noises
+    // record inputs, outputs
     std::vector<double> inputs, outputs, noises;
-    // records max size
-    static constexpr unsigned maxLogSize = 1024;
 };
-
