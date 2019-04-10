@@ -5,7 +5,7 @@ class ArxModel
 {
 public:
     ArxModel();
-    ArxModel(unsigned na, unsigned nb = 0);
+    ArxModel(unsigned na, unsigned nb = 0, unsigned nd = 1);
     virtual ~ArxModel() = default;
 
     // coefficients

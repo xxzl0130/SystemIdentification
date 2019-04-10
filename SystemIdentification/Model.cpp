@@ -1,10 +1,10 @@
 #include "Model.h"
 
-ArxModel::ArxModel():nd(0),y(0)
+ArxModel::ArxModel():nd(1),y(0)
 {
 }
 
-ArxModel::ArxModel(unsigned na, unsigned nb) : nd(0), y(0)
+ArxModel::ArxModel(unsigned na, unsigned nb, unsigned nd) : nd(nd), y(0)
 {
     coefA.resize(na);
     coefB.resize(nb);
@@ -21,7 +21,7 @@ double ArxModel::update(double input, double noise)
     {
         a += coefA(i) * *it;
     }
-    for(i = 0,it = outputs.rbegin();i < coefB.size() && it != outputs.rend();++i,++it)
+    for(i = 0,it = outputs.rbegin() + nd;i < coefB.size() && it != outputs.rend();++i,++it)
     {
         b += coefB(i) * *it;
     }
