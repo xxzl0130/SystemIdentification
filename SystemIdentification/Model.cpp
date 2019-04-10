@@ -6,10 +6,11 @@ ArxModel::ArxModel():nd(1),y(0)
 
 ArxModel::ArxModel(unsigned na, unsigned nb, unsigned nd) : nd(nd), y(0)
 {
-    coefA.resize(na);
-    coefB.resize(nb);
+    coefA.resize(na + 1);
+    coefB.resize(nb + 1);
 }
 
+//TODO:test
 double ArxModel::update(double input, double noise)
 {
     inputs.push_back(input);

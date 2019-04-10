@@ -37,7 +37,7 @@ ArxModel leastSquare(const double* inputs, const double* outputs, const unsigned
         }
         for(auto j = 0;j <= nb;++j)
         {
-            if(i - j - nd < 0)
+            if(int(i - nd - j) < 0)
             {
                 phi(i, na + j) = 0;
             }
@@ -60,10 +60,12 @@ ArxModel leastSquare(const double* inputs, const double* outputs, const unsigned
         }
     }
 
+    //svd分解求最小二乘解
     VectorXd x = phi.jacobiSvd(ComputeFullU | ComputeFullV).solve(y);
+    //VectorXd x = (phi.transpose() * phi).inverse() * phi.transpose() * y;
     ArxModel model(na, nb, nd);
-    model.coefA << x.head(na);
-    model.coefB << x.tail(nb);
+    model.coefA << 1,x.head(na);
+    model.coefB << x.tail(nb + 1);
 
     return model;
 }
