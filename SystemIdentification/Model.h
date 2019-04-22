@@ -8,15 +8,30 @@ public:
     ArxModel(unsigned na, unsigned nb = 0, unsigned nd = 1);
     virtual ~ArxModel() = default;
 
-    // coefficients
-    Eigen::VectorXd coefA, coefB;
-    // pure delay
-    unsigned nd;
+    void setNa(unsigned a);
+    void setNb(unsigned b);
+    void setNd(unsigned d);
+    void setCoefA(const Eigen::VectorXd &A);
+    Eigen::VectorXd getCoefA() const
+    {
+        return coefA;
+    }
+    void setCoefB(const Eigen::VectorXd &B);
+    Eigen::VectorXd getCoefB() const
+    {
+        return coefB;
+    }
+
     double y;   //output
-    // update the model with input and noise.
-    virtual double update(double input, double noise = 0);
+    // update the model
+    virtual double update(double input);
 
 protected:
     // record inputs, outputs
     std::vector<double> inputs, outputs, noises;
+    Eigen::VectorXd uk, yk;
+    unsigned na, nb, nd;
+    // coefficients
+    Eigen::VectorXd coefA, coefB;
+    Eigen::VectorXd theta;
 };

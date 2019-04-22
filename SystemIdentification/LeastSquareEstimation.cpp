@@ -1,4 +1,6 @@
 #include "LeastSquareEstimation.h"
+#include <iostream>
+using namespace std;
 using namespace Eigen;
 
 ArxModel leastSquare(const std::vector<double>& inputs, const std::vector<double>& outputs, unsigned na, unsigned nb,
@@ -60,12 +62,19 @@ ArxModel leastSquare(const double* inputs, const double* outputs, const unsigned
         }
     }
 
-    //svd分解求最小二乘解
+    cout << phi.block(0, 0, nCoef, nCoef) << endl;
+
+    //svd for least square
     VectorXd x = phi.jacobiSvd(ComputeFullU | ComputeFullV).solve(y);
     //VectorXd x = (phi.transpose() * phi).inverse() * phi.transpose() * y;
     ArxModel model(na, nb, nd);
-    model.coefA << 1,x.head(na);
-    model.coefB << x.tail(nb + 1);
+    Eigen::VectorXd A, B;
+    A.resize(na + 1);
+    B.resize(nb + 1);
+    A << 1,x.head(na);
+    B << x.tail(nb + 1);
+    model.setCoefA(A);
+    model.setCoefB(B);
 
     return model;
 }
