@@ -2,7 +2,7 @@
 #include <iostream>
 using namespace std;
 
-ArxModel::ArxModel():nd(1),y(0)
+ArxModel::ArxModel():na(0),nb(0),nd(1),y(0)
 {
 }
 
@@ -76,5 +76,15 @@ double ArxModel::update(double input)
     yk << y, yh;
 
     return y;
+}
+
+SModel d2c(const ArxModel& dModel, double Ts, DiscretizationMethod method)
+{
+    return SModel();
+}
+
+ArxModel c2d(const SModel& sModel, double Ts, DiscretizationMethod method)
+{
+    return ArxModel();
 }
 

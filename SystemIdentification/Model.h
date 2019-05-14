@@ -1,6 +1,8 @@
 #pragma once
 #include <Eigen\Dense>
 #include <vector>
+
+// ARX Model in discrete domain (z domain)
 class ArxModel
 {
 public:
@@ -35,3 +37,36 @@ protected:
     Eigen::VectorXd coefA, coefB;
     Eigen::VectorXd theta;
 };
+
+// Transfer function model in continuous domain (s domain).
+class SModel
+{
+public:
+    Eigen::VectorXd num; // Numerator
+    Eigen::VectorXd den; // Denominator
+};
+
+enum DiscretizationMethod
+{
+    Zoh,
+    Foh,
+    Tustin,
+    ZeroPole,
+};
+
+/**
+ * \brief convert ArxModel to SModel
+ * \param dModel discrete domain model
+ * \param Ts sample time
+ * \param method conversion method
+ * \return continuous model
+ */
+SModel d2c(const ArxModel& dModel, double Ts = 0.01, DiscretizationMethod method = Zoh);
+/**
+ * \brief convert SModel to ArxModel
+ * \param sModel continuous model
+ * \param Ts sample time
+ * \param method conversion method
+ * \return discrete model
+ */
+ArxModel c2d(const SModel& sModel, double Ts = 0.01, DiscretizationMethod method = Zoh);
