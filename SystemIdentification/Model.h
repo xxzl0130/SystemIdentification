@@ -3,6 +3,7 @@
 #include <vector>
 
 // ARX Model in discrete domain (z domain)
+// Ay = Bu*z^-d
 class ArxModel
 {
 public:

@@ -1,6 +1,8 @@
 #include "Model.h"
 #include <iostream>
+#include <Polynomial/Polynomial.hpp>
 using namespace std;
+typedef polynomial::Polynomial<Eigen::Dynamic> Polynomial;
 
 ArxModel::ArxModel():na(0),nb(0),nd(1),y(0)
 {
@@ -56,7 +58,6 @@ void ArxModel::setCoefB(const Eigen::VectorXd& B)
     coefB << B;
     theta.resize(na + nb + 1);
     theta << coefA.tail(coefA.size() - 1), coefB;
-    cout << theta << endl;
 }
 
 double ArxModel::update(double input)
@@ -85,6 +86,53 @@ SModel d2c(const ArxModel& dModel, double Ts, DiscretizationMethod method)
 
 ArxModel c2d(const SModel& sModel, double Ts, DiscretizationMethod method)
 {
+    switch (method)
+    {
+    case Zoh:
+        {
+            // s = (-z^-1 + 1) / Ts
+            Polynomial zoh(Eigen::Vector2d(-1, 1) / Ts);
+            //only preset constant
+            Polynomial num(Eigen::Vector2d(0, sModel.num(sModel.num.size() - 1)));
+            auto t = zoh;
+            for(auto i = sModel.num.size() - 2;i >= 0;--i)
+            {
+                num = num + t * sModel.num(i);
+                t = t * zoh;//plus one order
+            }
+            //only preset constant
+            Polynomial den(Eigen::Vector2d(0, sModel.den(sModel.den.size() - 1)));
+            t = zoh;
+            for (auto i = sModel.den.size() - 2; i >= 0; --i)
+            {
+                den = den + t * sModel.den(i);
+                t = t * zoh;//plus one order
+            }
+            ArxModel zModel(den.coefficients().size() - 1,  den.coefficients().size() - 1, 1);
+            
+            auto A = den.coefficients();
+            //reverse
+            for(auto i = 0;i < A.size() / 2;++i)
+            {
+                std::swap(A(i), A(A.size() - 1 - i));
+            }
+            // set coefficients and normalize
+            zModel.setCoefA(A / A(0));
+
+            Eigen::VectorXd B = Eigen::VectorXd::Zero(A.size());
+            //reverse and *z^n
+            for(auto i = 0;i < num.coefficients().size();++i)
+            {
+                B(i) = num.coefficients()(num.coefficients().size() - 1 - i);
+            }
+            // set coefficients and normalize
+            zModel.setCoefB(B / A(0));
+            return zModel;
+        }
+    default:
+        break;
+    }
+
     return ArxModel();
 }
 
