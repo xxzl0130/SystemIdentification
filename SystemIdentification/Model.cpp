@@ -81,6 +81,43 @@ double ArxModel::update(double input)
 
 SModel d2c(const ArxModel& dModel, double Ts, DiscretizationMethod method)
 {
+    switch (method)
+    {
+    case Zoh:
+        {
+            //z = 1/(1 - s*Ts)
+            Polynomial zoh(Eigen::Vector2d(-Ts, 1));
+            int order = std::max(dModel.getCoefA().size(), dModel.getCoefB().size());
+            auto t = Polynomial(Eigen::VectorXd::Identity(1,1));
+            auto den = Polynomial(Eigen::Vector2d(0, 0));
+            for(auto i = 0;i < order - dModel.getCoefA().size();++i)
+            {
+                t = t * zoh;
+            }
+            for(auto i = 0;i < dModel.getCoefA().size();++i)
+            {
+                den = den + t * dModel.getCoefA()(i);
+                t = t * zoh;
+            }
+            t = Polynomial(Eigen::VectorXd::Identity(1, 1));
+            auto num = Polynomial(Eigen::Vector2d(0, 0));
+            for (auto i = 0; i < order - dModel.getCoefB().size(); ++i)
+            {
+                t = t * zoh;
+            }
+            for(auto i = 0;i < dModel.getCoefB().size();++i)
+            {
+                num = num + t * dModel.getCoefB()(i);
+                t = t * zoh;
+            }
+            SModel sModel;
+            sModel.num = num.coefficients() / den.coefficients()(0);
+            sModel.den = den.coefficients() / den.coefficients()(0);
+            return sModel;
+        }
+    default:
+        break;
+    }
     return SModel();
 }
 
