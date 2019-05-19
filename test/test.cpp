@@ -11,7 +11,10 @@ int main()
     auto A = Eigen::Vector3d(1, 110,10);
     dModel.setCoefB(B);
     dModel.setCoefA(A);
-    auto cModel = d2c(dModel);
-    cout << cModel.num.transpose() << endl << cModel.den.transpose() << endl;
+    SModel sModel;
+    sModel.num = B;
+    sModel.den = A;
+    auto cModel = c2d(sModel,0.01,Tustin);
+    cout << cModel.getCoefB().transpose() << endl << cModel.getCoefA().transpose() << endl;
     system("pause");
 }

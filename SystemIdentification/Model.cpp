@@ -1,5 +1,6 @@
 #include "Model.h"
 #include <iostream>
+#include <vector>
 #include <Polynomial/Polynomial.hpp>
 using namespace std;
 typedef polynomial::Polynomial<Eigen::Dynamic> Polynomial;
@@ -88,7 +89,7 @@ SModel d2c(const ArxModel& dModel, double Ts, DiscretizationMethod method)
             //z = 1/(1 - s*Ts)
             Polynomial zoh(Eigen::Vector2d(-Ts, 1));
             int order = std::max(dModel.getCoefA().size(), dModel.getCoefB().size());
-            auto t = Polynomial(Eigen::VectorXd::Identity(1,1));
+            auto t = Polynomial(Eigen::VectorXd::Identity(1,1));    //constant 1
             auto den = Polynomial(Eigen::Vector2d(0, 0));
             for(auto i = 0;i < order - dModel.getCoefA().size();++i)
             {
@@ -109,6 +110,55 @@ SModel d2c(const ArxModel& dModel, double Ts, DiscretizationMethod method)
             {
                 num = num + t * dModel.getCoefB()(i);
                 t = t * zoh;
+            }
+            SModel sModel;
+            sModel.num = num.coefficients() / den.coefficients()(0);
+            sModel.den = den.coefficients() / den.coefficients()(0);
+            return sModel;
+        }
+    case Tustin:
+        //z = (1+s*Ts/2)/(1-s*Ts/2)
+        {
+            Polynomial denP0(Eigen::Vector2d(-Ts/2, 1));     //(1-s*Ts/2)
+            Polynomial numP0(Eigen::Vector2d( Ts/2, 1));     //(1+s*Ts/2)
+            Polynomial den(Eigen::VectorXd::Zero(1, 1));
+            Polynomial num(Eigen::VectorXd::Zero(1, 1));
+            int order = std::max(dModel.getCoefA().size(), dModel.getCoefB().size());
+            auto tmpDen = Polynomial(Eigen::VectorXd::Identity(1, 1));    //constant 1
+            auto tmpNum = tmpDen;    //constant 1
+            std::vector<Polynomial> dens, nums;
+            dens.resize(dModel.getCoefA().size(), Polynomial(Eigen::Vector2d(0, 0)));
+            nums.resize(dModel.getCoefA().size(), Polynomial(Eigen::Vector2d(0, 0)));
+            for (auto i = 0; i < order - dModel.getCoefA().size(); ++i)
+            {
+                tmpDen = tmpDen * denP0;
+            }
+            for (auto i = 0; i < dModel.getCoefA().size(); ++i)
+            {
+                dens[i] = tmpDen * dModel.getCoefA()(i);
+                tmpDen = tmpDen * denP0;
+            }
+            for(auto i = dModel.getCoefA().size() - 1;i >= 0;--i)
+            {
+                den = den + dens[i] * tmpNum;
+                tmpNum = tmpNum * numP0;
+            }
+
+            tmpDen = Polynomial(Eigen::VectorXd::Identity(1, 1));    //constant 1
+            tmpNum = tmpDen;    //constant 1
+            for (auto i = 0; i < order - dModel.getCoefB().size(); ++i)
+            {
+                tmpDen = tmpDen * denP0;
+            }
+            for (auto i = 0; i < dModel.getCoefB().size(); ++i)
+            {
+                nums[i] = tmpDen * dModel.getCoefB()(i);
+                tmpDen = tmpDen * denP0;
+            }
+            for (auto i = dModel.getCoefB().size() - 1; i >= 0; --i)
+            {
+                num = num + nums[i] * tmpNum;
+                tmpNum = tmpNum * numP0;
             }
             SModel sModel;
             sModel.num = num.coefficients() / den.coefficients()(0);
@@ -165,6 +215,55 @@ ArxModel c2d(const SModel& sModel, double Ts, DiscretizationMethod method)
             // set coefficients and normalize
             zModel.setCoefB(B / A(0));
             return zModel;
+        }
+    case Tustin:
+        //s = (2/Ts) * (z - 1) / (z + 1)
+        {
+        Polynomial denP0(Eigen::Vector2d(1, 1));        //(z + 1)
+        Polynomial numP0 = Polynomial(Eigen::Vector2d(1, -1)) * (2 / Ts);       //(2/Ts) * (z - 1)
+        Polynomial den(Eigen::VectorXd::Zero(1, 1));
+        Polynomial num(Eigen::VectorXd::Zero(1, 1));
+        int order = std::max(sModel.num.size(), sModel.den.size());
+        auto tmpDen = Polynomial(Eigen::VectorXd::Identity(1, 1));    //constant 1
+        auto tmpNum = tmpDen;    //constant 1
+        std::vector<Polynomial> dens, nums;
+        dens.resize(sModel.den.size(), Polynomial(Eigen::Vector2d(0, 0)));
+        nums.resize(sModel.num.size(), Polynomial(Eigen::Vector2d(0, 0)));
+        for (auto i = 0; i < order - sModel.den.size(); ++i)
+        {
+            tmpDen = tmpDen * denP0;
+        }
+        for (auto i = 0; i < sModel.den.size(); ++i)
+        {
+            dens[i] = tmpDen * sModel.den(i);
+            tmpDen = tmpDen * denP0;
+        }
+        for (auto i = sModel.den.size() - 1; i >= 0; --i)
+        {
+            den = den + dens[i] * tmpNum;
+            tmpNum = tmpNum * numP0;
+        }
+
+        tmpDen = Polynomial(Eigen::VectorXd::Identity(1, 1));    //constant 1
+        tmpNum = tmpDen;    //constant 1
+        for (auto i = 0; i < order - sModel.num.size(); ++i)
+        {
+            tmpDen = tmpDen * denP0;
+        }
+        for (auto i = 0; i < sModel.num.size(); ++i)
+        {
+            nums[i] = tmpDen * sModel.num(i);
+            tmpDen = tmpDen * denP0;
+        }
+        for (auto i = sModel.num.size() - 1; i >= 0; --i)
+        {
+            num = num + nums[i] * tmpNum;
+            tmpNum = tmpNum * numP0;
+        }
+        ArxModel dModel(den.coefficients().size() - 1, den.coefficients().size() - 1, 1);
+        dModel.setCoefB(num.coefficients() / den.coefficients()(0));
+        dModel.setCoefA(den.coefficients() / den.coefficients()(0));
+        return dModel;
         }
     default:
         break;
