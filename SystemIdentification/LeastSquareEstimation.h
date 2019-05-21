@@ -26,7 +26,7 @@ ArxModel leastSquare(const double* inputs, const double* outputs, const unsigned
     unsigned nd = 1);
 
 /**
- * \brief Recursion Least Square with forgeting factor and damping factor.
+ * \brief Recursion Least Square with forgetting factor and damping factor.
  * RLS has to record inputs and outputs, so make it class instead of function.
  */
 class RLS
