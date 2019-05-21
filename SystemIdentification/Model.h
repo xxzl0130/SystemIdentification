@@ -12,15 +12,18 @@ public:
     virtual ~ArxModel() = default;
 
     void setNa(unsigned a);
+    unsigned Na() const { return na; }
     void setNb(unsigned b);
+    unsigned Nb() const { return nb; }
     void setNd(unsigned d);
+    unsigned Nd() const { return nd; }
     void setCoefA(const Eigen::VectorXd &A);
-    Eigen::VectorXd getCoefA() const
+    const Eigen::VectorXd& getCoefA() const
     {
         return coefA;
     }
     void setCoefB(const Eigen::VectorXd &B);
-    Eigen::VectorXd getCoefB() const
+    const Eigen::VectorXd& getCoefB() const
     {
         return coefB;
     }
@@ -38,6 +41,7 @@ protected:
     Eigen::VectorXd coefA, coefB;
     Eigen::VectorXd theta;
 };
+
 
 // Transfer function model in continuous domain (s domain).
 class SModel
